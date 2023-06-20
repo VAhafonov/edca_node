@@ -1,8 +1,11 @@
 import server from "./server";
+import getAddressFromPrivateKey from "./utils";
 
-function Wallet({ address, setAddress, balance, setBalance }) {
+function Wallet({ private_key, setPrivateKey, address, setAddress, balance, setBalance }) {
   async function onChange(evt) {
-    const address = evt.target.value;
+    const private_key = evt.target.value;
+    const address = getAddressFromPrivateKey(private_key);
+    setPrivateKey(private_key);
     setAddress(address);
     if (address) {
       const {
@@ -19,9 +22,13 @@ function Wallet({ address, setAddress, balance, setBalance }) {
       <h1>Your Wallet</h1>
 
       <label>
-        Wallet Address
-        <input placeholder="Type an address, for example: 0x1" value={address} onChange={onChange}></input>
+        Private key
+        <input placeholder="Type an private key" value={private_key} onChange={onChange}></input>
       </label>
+
+      <div>
+        Address: {address}
+      </div>
 
       <div className="balance">Balance: {balance}</div>
     </div>

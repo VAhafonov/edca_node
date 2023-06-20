@@ -1,7 +1,8 @@
 import { useState } from "react";
 import server from "./server";
+import * as crypto_utils from "./utils";
 
-function Transfer({ address, setBalance }) {
+function Transfer({ private_key, setBalance }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
 
@@ -9,19 +10,34 @@ function Transfer({ address, setBalance }) {
 
   async function transfer(evt) {
     evt.preventDefault();
+    const hash = crypto_utils.hashMessage("Send " + toString(sendAmount) + " to " + toString(recipient));
+    let signature = crypto_utils.signMessage(hash, private_key);
+    const recovery_bit = crypto_utils.getRecoveryBitFromSignature(signature);
+    signature = crypto_utils.signatureToCompact(signature);
 
-    try {
-      const {
-        data: { balance },
-      } = await server.post(`send`, {
-        sender: address,
-        amount: parseInt(sendAmount),
-        recipient,
-      });
-      setBalance(balance);
-    } catch (ex) {
-      alert(ex.response.data.message);
-    }
+    const {
+      data: { balance },
+    } = await server.post(`send`, {
+      hash: hash,
+      signature: signature,
+      recovery_bit: recovery_bit,
+      amount: parseInt(sendAmount),
+      recipient: recipient,
+    });
+    setBalance(balance);
+
+    // try {
+    //   const {
+    //     data: { balance },
+    //   } = await server.post(`send`, {
+    //     signature: crypto_utils.signMessage("Send", private_key),
+    //     amount: parseInt(sendAmount),
+    //     recipient,
+    //   });
+    //   setBalance(balance);
+    // } catch (ex) {
+    //   alert(ex.response.data.message);
+    // }
   }
 
   return (
